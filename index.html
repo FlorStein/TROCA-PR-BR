@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#18334b">
+  <title>Troca · Um novo jeito de viajar</title>
+  <link rel="stylesheet" href="https://api.fontshare.com/v2/css?f[]=satoshi@400,900&amp;display=swap">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@700&amp;display=swap">
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; min-height: 100svh; display: grid; place-items: center; background: #18334b; color: #fff; font-family: Satoshi, Arial, sans-serif; }
+    .frame { width: min(100vw, calc(100svh * 1280 / 632)); aspect-ratio: 1280 / 632; position: relative; isolation: isolate; overflow: hidden; background: #18334b; }
+    video, .shade { position: absolute; inset: 0; width: 100%; height: 100%; }
+    video { object-fit: contain; opacity: 0; transition: opacity .6s ease; }
+    .frame.ready video { opacity: 1; }
+    .shade { pointer-events: none; background: radial-gradient(ellipse at center, #081b2b66, transparent 70%); }
+    header { position: absolute; z-index: 2; inset: 0 0 auto; padding: clamp(.55rem, 2vw, 1.7rem); font: 700 clamp(1.15rem, 2vw, 2rem)/1 Outfit, Arial, sans-serif; }
+    .caption { position: absolute; inset: 50% auto auto 50%; transform: translate(-50%, -50%); width: 90%; text-align: center; }
+    [hidden] { display: none !important; }
+    h1, h2 { margin: 0; line-height: 1; letter-spacing: -.045em; text-wrap: balance; }
+    h1 { font-size: clamp(2rem, min(14vw, 25svh), 13rem); font-weight: 900; line-height: .85; }
+    h2 { font-size: clamp(1.2rem, 5.4vw, 4.8rem); font-weight: 400; text-shadow: 0 2px 18px #081b2bcc; }
+    a, button { color: #18334b; background: #faeee5; border: 0; border-radius: 99px; padding: .72rem 1.25rem; font: inherit; text-decoration: none; cursor: pointer; }
+    .caption a { display: inline-block; margin-top: .75rem; }
+    .start { position: absolute; z-index: 3; top: 50%; left: 50%; transform: translate(-50%, -50%); white-space: nowrap; }
+    @media (max-width: 600px) { .caption a { margin-top: .45rem; padding: .5rem 1rem; font-size: .85rem; } }
+    @media (prefers-reduced-motion: reduce) { video { transition: none; } }
+  </style>
+</head>
+<body>
+  <main class="frame" aria-label="Apresentação da Troca">
+    <video id="journey" src="viagem-brasil.mp4" muted playsinline preload="auto" aria-hidden="true"></video>
+    <div class="shade" aria-hidden="true"></div>
+    <header>Troca</header>
+    <section class="caption" hidden><h1>DESCUBRA<br>A TROCA</h1></section>
+    <section class="caption" hidden><h2>Um novo jeito de viajar</h2></section>
+    <section class="caption" hidden><h2>Troque de casa<br>Mude de paisagem</h2></section>
+    <section class="caption" hidden><h2>Descubra cada lugar como quem vive lá</h2></section>
+    <section class="caption" hidden><h2>Sinta-se em casa, longe de casa</h2></section>
+    <section class="caption" hidden><h2>Você chegou, você trocou</h2><a href="https://troca-2q9.pages.dev/">ENTRAR</a></section>
+    <button class="start" type="button" hidden>Iniciar apresentação</button>
+  </main>
+  <script>
+    const film = document.getElementById('journey');
+    const frame = document.querySelector('.frame');
+    const captions = [...document.querySelectorAll('.caption')];
+    const start = document.querySelector('.start');
+    const reduced = matchMedia('(prefers-reduced-motion: reduce)');
+    const times = [1.2, 4.1, 6.5, 9.5, 12.9, 18.2];
+    let animation = 0;
+
+    function showChapter(active) {
+      captions.forEach((caption, index) => { caption.hidden = index !== active; });
+    }
+
+    function render() {
+      const time = film.currentTime;
+      const active = times.findLastIndex(mark => time >= mark);
+      showChapter(active);
+      if (active >= 0) {
+        const fadeIn = Math.min(1, (time - times[active]) / .4);
+        const fadeOut = Math.min(1, ((times[active + 1] ?? Infinity) - time) / .3);
+        captions[active].style.opacity = String(Math.min(fadeIn, fadeOut));
+      }
+      if (!film.paused && !film.ended) animation = requestAnimationFrame(render);
+    }
+
+    function play() {
+      film.play().then(() => { start.hidden = true; }).catch(() => {
+        showChapter(-1);
+        start.hidden = false;
+      });
+    }
+
+    function ready() {
+      frame.classList.add('ready');
+      if (reduced.matches) showChapter(captions.length - 1);
+      else play();
+    }
+
+    film.addEventListener('playing', () => {
+      cancelAnimationFrame(animation);
+      render();
+    });
+    film.addEventListener('ended', () => showChapter(captions.length - 1));
+    film.addEventListener('error', () => showChapter(captions.length - 1));
+    start.addEventListener('click', play);
+    if (film.readyState >= 2) ready();
+    else film.addEventListener('loadeddata', ready, { once: true });
+  </script>
+</body>
+</html>
